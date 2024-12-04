@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decoded Data - From Gateway. From satellite to be inplemented soon.</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        .collapsible-content {
+            background-color: #f9f9f9;
+            padding: 15px;
+        }
+
+        .collapsible-content ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .collapsible-content li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .toggle-button {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toggle-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .toggle-button::after {
+            content: "▼";
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-button.expanded::after {
+            transform: rotate(180deg);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Decoded Data - From Gateway. From satellite to be inplemented soon.</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Created Time (ET)</th>
+                <th>Device Name</th>
+                <th>fPort</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="data-table">
+            <!-- Rows will be dynamically generated here -->
+        </tbody>
+    </table>
+
+    <script>
+        function convertUTCtoET(utcDateString) {
+            const date = new Date(utcDateString);
+            date.setHours(date.getHours() ); // Convert to ET (UTC-5)
+            return date.toLocaleString('en-US', { 
+                timeZone: 'America/New_York',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        }
+
+        async function fetchAndDisplayData() {
+            try {
+                const response = await fetch('http://134.209.148.222:9000/api/lorawan/read');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const dataTable = document.getElementById("data-table");
+                    dataTable.innerHTML = ''; // Clear existing content
+
+                    result.data.forEach((record, index) => {
+                        // Create main row
+                        const row = document.createElement("tr");
+                        row.className = "data-row";
+
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${convertUTCtoET(record.createdAt)}</td>
+                            <td>${record.deviceName || 'N/A'}</td>
+                            <td>${record.portNumber}</td>
+                            <td><button class="toggle-button">Details</button></td>
+                        `;
+
+                        // Create collapsible row
+                        const collapsibleRow = document.createElement("tr");
+                        collapsibleRow.className = "collapsible-row hidden";
+
+                        const collapsibleCell = document.createElement("td");
+                        collapsibleCell.colSpan = 5; // Updated to match new column count
+                        collapsibleCell.className = "collapsible-content";
+
+                        let detailsHTML = "<ul>";
+                        Object.entries(record.decodedData).forEach(([key, value]) => {
+                            // Skip the "Field" entry if it exists
+                            if (key === "Field") return;
+                            
+                            detailsHTML += `
+                                <li>
+                                    <strong>${key}</strong><br>
+                                    Hex: ${value.Hex}<br>
+                                    Value: ${value.Value}<br>
+                                    Interpreted: ${value.Interpreted}
+                                </li>`;
+                        });
+                        detailsHTML += "</ul>";
+
+                        collapsibleCell.innerHTML = detailsHTML;
+                        collapsibleRow.appendChild(collapsibleCell);
+
+                        // Append both rows
+                        dataTable.appendChild(row);
+                        dataTable.appendChild(collapsibleRow);
+
+                        // Add click handler
+                        const toggleButton = row.querySelector(".toggle-button");
+                        toggleButton.addEventListener("click", () => {
+                            const isHidden = collapsibleRow.classList.contains("hidden");
+                            collapsibleRow.classList.toggle("hidden");
+                            toggleButton.classList.toggle("expanded");
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Initial load
+        fetchAndDisplayData();
+
+        // Refresh every minute
+        setInterval(fetchAndDisplayData, 600000);
+    </script>
+</body>
+</html>

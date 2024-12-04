@@ -1,0 +1,23 @@
+Field,Hex,Value,Interpreted
+sequence_number,016c,364,2024-12-04T19:00:00Z
+avg_temperature,018b,395,39.5 deg F
+high_temp,01,1,+0.1 deg F => 39.6 deg F
+low_temp,02,2,-0.2 deg F => 39.3 deg F
+rainfall,0000,0,"0.00"" Rain"
+rain_rate,0000,0,0.00 inches/hr
+humidity,4d,77,77%
+barometer,719c,29084,29.084 in. hg
+solar_radiation,ffff,65535,--
+solar_radiation_high,ffff,65535,--
+avg_wind_speed,08,8,8 MPH
+high_wind_speed,15,21,21 MPH
+wind_dir,c2,194,prevailing dir: W; gust_dir: NE
+soil_temp_1,ff,255,--
+soil_temp_2,ff,255,--
+soil_temp_3,ff,255,--
+soil_temp_4,ff,255,--
+soil_moist_1,ff,255,--
+soil_moist_2,ff,255,--
+soil_moist_3,ff,255,--
+soil_moist_4,ff,255,--
+leaf_wetness_1,ff,255,255
